@@ -1,0 +1,102 @@
+---
+title: '#Task1:TITANIC SURVIVAL PREDICTION'
+author: "Aishani Dey"
+date: "2023-08-09"
+output:
+  word_document: default
+  html_document: default
+---
+## Loading the data and Omitting the na values:
+
+```{r}
+d=read.csv("C:/Users/Aishani/Downloads/tested.csv")
+k=is.na(d)
+d1=na.omit(d)
+```
+
+## Calling the important libraries and obtaining the structure of the data:
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(gridExtra)
+glimpse(d)
+```
+
+## Visualizing Age, Passenger-Class and Sex wrt survival status where 1 denotes survived/alive and 0 denotes not survived/dead.
+
+```{r}
+g1=ggplot(d1,aes(Age,fill=as.factor(Survived)))+geom_density(aes(y=..density..),col=1,alpha=0.5)+
+ scale_fill_brewer(palette="Set1")+labs(fill="Survial Status");g1
+```
+
+### Observation:
+
+a)Most of the passengers died at the age between 20 to 40 and the survival rate is also high at this age.
+
+b)After 60, the rate of survival decreases.
+
+```{r}
+g2=ggplot(d1,aes(Pclass,fill=as.factor(Survived)))+geom_bar(position="dodge")+scale_fill_brewer(palette="Set1")+labs(fill="Survial Status");g2
+```
+
+### Observation:
+
+a)The survival rate of the 1st class passengers are almost equal to their fatal rate.
+
+b)The survival rate for 2nd class and 3rd class passengers decreases.
+
+```{r}
+g3=ggplot(d1,aes(Sex,fill=as.factor(Survived)))+geom_bar(position="dodge")+scale_fill_brewer(palette="Set2")+labs(fill="Survial Status");g3
+```
+
+### Observation:
+
+a)From the graph we can see,The females are only survived and males are died more than the number of females survived.
+
+```{r}
+table(sex=d1$Sex,status=d1$Survived)
+```
+
+
+
+## training the model and testing the validity:
+
+Here, we fit a logistic regression model on the training data since we have our response (survival status) as binary variable.
+ we have taken our covariates as Age,Pclass,Fare,Embarked.
+
+```{r}
+set.seed(seed=1)
+s=sample(c("T","F"),nrow(d1),prob=c(0.7,0.3),replace=T)
+train=subset(d1,s=="T")
+test=subset(d1,s=="F")
+train$Pclass=as.factor(train$Pclass)
+test$Pclass=as.factor(test$Pclass)
+model=glm(Survived~Age+Pclass+Fare+Embarked,train,family=binomial(link="logit"))
+pred=as.numeric(predict(model,type="response",newdata=test))
+```
+
+###### After fitting the model, we construct confusion matrix using th test data taking the cut off value as 0.5.
+
+```{r}
+library(ModelMetrics)
+m=confusionMatrix(test$Survived,pred,cutoff = 0.5);m
+```
+
+### We now find the Misclassification Rate as follows:
+
+```{r}
+misclassification_error=(26+5)/95;misclassification_error
+```
+
+##### It comes out as almost 33%.
+
+### We test the accuracy of the model through ROC curve.
+
+```{r}
+library(pROC)
+roc(test$Survived~pred,plot=T,print.auc=TRUE)
+```
+
+### Since the area under the curve is almost 0.64 that is our model has 64% accuracy.

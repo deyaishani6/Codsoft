@@ -1,0 +1,70 @@
+---
+title: '# Task 3:IRIS FLOWER CLASSIFICATION'
+author: "Aishani Dey"
+date: "2023-07-30"
+output:
+  html_document: default
+  word_document: default
+---
+## Iris Flower Classification:
+
+Firstly we have to look into the the dataset and the  correlation between different measurements of the flower species.
+
+We have used ggpairs to show the correlation with diagram
+
+```{r}
+iris[5,]
+library(GGally)
+ggpairs(iris,columns=1:4,aes(col=Species))
+```
+
+We have gathered few observations from the correlation pair plot:
+
+a)The pair plot reveals that sepal length and petal length,petal length and petal width,sepal length and petal width are strongly positively correlated.
+
+b)But sepal length and sepal width are not that strongly related to each other.
+
+#### Now we will understand the individual measurements of different flower species through boxplots.
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+g1=ggplot(iris,aes(Sepal.Length,fill=Species))+geom_boxplot()+coord_flip()
+g2=ggplot(iris,aes(Sepal.Width,fill=Species))+geom_boxplot()+coord_flip()
+g3=ggplot(iris,aes(Petal.Length,fill=Species))+geom_boxplot()+coord_flip()
+g4=ggplot(iris,aes(Petal.Width,fill=Species))+geom_boxplot()+coord_flip()
+grid.arrange(g1,g2,g3,g4,nrow=3)
+```
+From the boxplots, we have the following observations:
+
+a)On an average, the mean petal length,sepal length, petal width of Virginica are more than the other two species but the sepal width of setosa is slightly more than other two species.
+
+#### Model fitting:
+
+We will deploy a linear discriminant model taking the training data and testing the validity of the model using test data since the species are of three types and we are taking species as the response.
+
+```{r}
+set.seed(seed=123)
+s=sample(c("T","F"),nrow(iris),replace=T,prob=c(0.7,0.3))
+train=subset(iris,s=="T") ## training data
+test=subset(iris,s=="F") ## test data
+```
+
+## Linear discriminant model:
+```{r}
+library(clusterSim)
+model=lda(Species~.,train);model
+pred=predict(model,newdata=test)$class;pred
+```
+
+## The accuracy of the model:
+
+```{r}
+mean(pred==test$Species)
+```
+
+```{r}
+library(klaR)
+partimat(factor(Species)~.,iris,method="lda")
+```
+
